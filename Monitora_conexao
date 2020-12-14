@@ -1,0 +1,82 @@
+#!/usr/bin/tclsh
+
+# Autor: MINEMAM
+# 06/12/2020
+# Sobre: Mostra as conexões de rede, usando como base o arquivo "/proc/net/tcp"
+# BSD-3-Clause License 
+
+
+#------------Funçoes----------------
+
+# Converte hexadecimal(little-edian) para decimal 
+proc hex_to_dec { hex } {
+	set cont 0
+	set hex_lista {}
+# Reordena o valor hexadecimal(little-edian) para convertelo
+	while { $cont != [ string length $hex ] } {
+		set hex_conv [ string index $hex $cont ]
+		set par [ regexp {([02468])} $cont par_m ]
+		if { $par == 1} {
+			set indice [ expr $cont + 1 ]
+			set hex_lista [ linsert $hex_lista $indice $hex_conv ]
+		} else {
+			set indice [ expr $cont - 1 ]
+			set hex_lista [ linsert $hex_lista $indice $hex_conv ]
+		}
+		incr cont
+	}
+# Inverte a ordem da lista
+	set cont 7
+	set indice 0
+	set dec_lista {}
+	while { $cont != -1 } {
+		set var_atu [ lindex $hex_lista $cont ]
+		set dec_lista [ linsert $dec_lista $indice $var_atu ]
+		incr cont -1
+		incr indice
+	}
+# Converte hexadecimal para decimal usando o "expr 0x"
+	set dec1 [ expr 0x[ lindex $dec_lista 0 ][ lindex $dec_lista 1 ] ]
+	set dec2 [ expr 0x[ lindex $dec_lista 2 ][ lindex $dec_lista 3 ] ]
+	set dec3 [ expr 0x[ lindex $dec_lista 4 ][ lindex $dec_lista 5 ] ]
+	set dec4 [ expr 0x[ lindex $dec_lista 6 ][ lindex $dec_lista 7 ] ]
+	set resultado "$dec1.$dec2.$dec3.$dec4"
+	return $resultado
+}
+
+#------------Inicio-----------------
+
+# Verifica se o arquivo existe
+if { [ file exists /proc/net/tcp ] } {
+	set tcp_file [ open  /proc/net/tcp r ]
+} else {
+	puts "Arquivo não existe!"
+	exit
+}
+
+set cont 0
+while { ! [ eof $tcp_file ] } {
+	if { $cont == 0 } {
+		set tcp_linha [ gets $tcp_file ]
+		puts "Conexão Local:		Conexão Remota:"
+	} else {
+		set tcp_linha [ gets $tcp_file ]
+		if { $tcp_linha == "" } {
+			break
+		}
+		# IP:PORTA DE ORIGEM
+		set hex_orig [ lindex $tcp_linha 1 ]
+		set hex_ip_o [ string range $hex_orig 0 7 ]
+		set ip_local [ hex_to_dec $hex_ip_o ]
+		set porta_local [ expr 0x[ string range $hex_orig 9 12 ] ]
+		# IP:PORTA DE DESTINO
+		set hex_dest [ lindex $tcp_linha 2 ]
+		set hex_ip_d [ string range $hex_dest 0 7 ]
+		set ip_dest [ hex_to_dec $hex_ip_d ]
+		set porta_dest  [ expr 0x[ string range $hex_dest 9 12 ] ]
+		puts "$ip_local:$porta_local		$ip_dest:$porta_dest"
+	}
+	incr cont
+}
+
+close $tcp_file
