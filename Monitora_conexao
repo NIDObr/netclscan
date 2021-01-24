@@ -46,31 +46,35 @@ proc hex_to_dec { hex } {
 
 #------------Inicio-----------------
 
-# Verifica se o arquivo existe
-if { [ file exists /proc/net/tcp ] } {
-	set tcp_file [ open  /proc/net/tcp r ]
+if { "$argv" == "-u" && [ file exists /proc/net/udp ] } {
+	set net_file [ open /proc/net/udp r ]
+} elseif { "$argv" == "-t" && [ file exists /proc/net/tcp ] } {
+	set net_file [ open /proc/net/tcp r ]
+} elseif { $argc == 0 } {
+	puts "$argv0: Mostra as conexões de rede\n\n	$argv0 \[opções\]\n	Opções:\n	-u Lista as conexões UDP\n	-t Lista as conexões TCP"
+	exit
 } else {
-	puts "Arquivo não existe!"
+	puts "Arquivo não encontrado"
 	exit
 }
 
 set cont 0
-while { ! [ eof $tcp_file ] } {
+while { ! [ eof $net_file ] } {
 	if { $cont == 0 } {
-		set tcp_linha [ gets $tcp_file ]
+		set net_linha [ gets $net_file ]
 		puts "Conexão Local:			Conexão Remota:"
 	} else {
-		set tcp_linha [ gets $tcp_file ]
-		if { $tcp_linha == "" } {
+		set net_linha [ gets $net_file ]
+		if { $net_linha == "" } {
 			break
 		}
 		# IP:PORTA DE ORIGEM
-		set hex_orig [ lindex $tcp_linha 1 ]
+		set hex_orig [ lindex $net_linha 1 ]
 		set hex_ip_o [ string range $hex_orig 0 7 ]
 		set ip_local [ hex_to_dec $hex_ip_o ]
 		set porta_local [ expr 0x[ string range $hex_orig 9 12 ] ]
 		# IP:PORTA DE DESTINO
-		set hex_dest [ lindex $tcp_linha 2 ]
+		set hex_dest [ lindex $net_linha 2 ]
 		set hex_ip_d [ string range $hex_dest 0 7 ]
 		set ip_dest [ hex_to_dec $hex_ip_d ]
 		set porta_dest  [ expr 0x[ string range $hex_dest 9 12 ] ]
@@ -84,4 +88,4 @@ while { ! [ eof $tcp_file ] } {
 	incr cont
 }
 
-close $tcp_file
+close $net_file
