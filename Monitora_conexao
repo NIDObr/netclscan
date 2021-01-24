@@ -1,7 +1,7 @@
 #!/usr/bin/tclsh
 
 # Autor: MINEMAM
-# 06/12/2020
+# 24/01/2021
 # Sobre: Mostra as conexões de rede, usando como base o arquivo "/proc/net/tcp"
 # BSD-3-Clause License 
 
@@ -12,7 +12,7 @@
 proc hex_to_dec { hex } {
 	set cont 0
 	set hex_lista {}
-# Reordena o valor hexadecimal(little-edian) para convertelo
+	# Reordena o valor hexadecimal(little-edian) para convertelo
 	while { $cont != [ string length $hex ] } {
 		set hex_conv [ string index $hex $cont ]
 		set par [ regexp {([02468])} $cont par_m ]
@@ -25,7 +25,7 @@ proc hex_to_dec { hex } {
 		}
 		incr cont
 	}
-# Inverte a ordem da lista
+	# Inverte a ordem da lista
 	set cont 7
 	set indice 0
 	set dec_lista {}
@@ -35,7 +35,7 @@ proc hex_to_dec { hex } {
 		incr cont -1
 		incr indice
 	}
-# Converte hexadecimal para decimal usando o "expr 0x"
+	# Converte hexadecimal para decimal usando o "expr 0x"
 	set dec1 [ expr 0x[ lindex $dec_lista 0 ][ lindex $dec_lista 1 ] ]
 	set dec2 [ expr 0x[ lindex $dec_lista 2 ][ lindex $dec_lista 3 ] ]
 	set dec3 [ expr 0x[ lindex $dec_lista 4 ][ lindex $dec_lista 5 ] ]
@@ -58,7 +58,7 @@ set cont 0
 while { ! [ eof $tcp_file ] } {
 	if { $cont == 0 } {
 		set tcp_linha [ gets $tcp_file ]
-		puts "Conexão Local:		Conexão Remota:"
+		puts "Conexão Local:			Conexão Remota:"
 	} else {
 		set tcp_linha [ gets $tcp_file ]
 		if { $tcp_linha == "" } {
@@ -74,7 +74,12 @@ while { ! [ eof $tcp_file ] } {
 		set hex_ip_d [ string range $hex_dest 0 7 ]
 		set ip_dest [ hex_to_dec $hex_ip_d ]
 		set porta_dest  [ expr 0x[ string range $hex_dest 9 12 ] ]
-		puts "$ip_local:$porta_local		$ip_dest:$porta_dest"
+		if { [ string first ":" "$ip_local:$porta_local" ] < 11 } {
+			set tab "	"
+		} else {
+			set tab ""
+		}
+		puts "$ip_local:$porta_local	$tab	$ip_dest:$porta_dest"
 	}
 	incr cont
 }
