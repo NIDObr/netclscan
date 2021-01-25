@@ -48,10 +48,23 @@ proc hex_to_dec { hex } {
 
 if { "$argv" == "-u" && [ file exists /proc/net/udp ] } {
 	set net_file [ open /proc/net/udp r ]
+	puts "Conexão Local:			Conexão Remota:\nUDP:"
 } elseif { "$argv" == "-t" && [ file exists /proc/net/tcp ] } {
 	set net_file [ open /proc/net/tcp r ]
+	puts "Conexão Local:			Conexão Remota:\nTCP:"
+} elseif { "$argv" == "-a" && [ file exists /proc/net/udp ] && [ file exists /proc/net/tcp ] } {
+	set tcp_file [ open /proc/net/tcp r ]
+	set udp_file [ open /proc/net/udp r]
+	set tmp_time [ clock format [ clock seconds ] -format {%d%m%y_%H%M%S} ]
+	set tmp_file [ open /tmp/net_all_conexao_$tmp_time a+ ]
+	puts $tmp_file [ read $tcp_file ]
+	puts $tmp_file [ read $udp_file ]
+	close $tcp_file
+	close $udp_file
+	close $tmp_file
+	set net_file [ open /tmp/net_all_conexao_$tmp_time r ]
 } elseif { $argc == 0 } {
-	puts "$argv0: Mostra as conexões de rede\n\n	$argv0 \[opções\]\n	Opções:\n	-u Lista as conexões UDP\n	-t Lista as conexões TCP"
+	puts "$argv0: Mostra as conexões de rede\n\n	$argv0 \[opções\]\n	\nOpções:\n	-u Lista as conexões UDP\n	-t Lista as conexões TCP\n	-a Lista as conexoẽs UDP e TCP"
 	exit
 } else {
 	puts "Arquivo não encontrado"
@@ -59,13 +72,24 @@ if { "$argv" == "-u" && [ file exists /proc/net/udp ] } {
 }
 
 set cont 0
-while { ! [ eof $net_file ] } {
+set skip_linha 0
+while { ! [ eof "$net_file" ] } {
 	if { $cont == 0 } {
-		set net_linha [ gets $net_file ]
-		puts "Conexão Local:			Conexão Remota:"
+		set net_linha [ gets "$net_file" ]
+		if { $argv == "-a" } { puts "Conexão Local:			Conexão Remota:\nTCP:" }
+	} elseif { $skip_linha == 1 } {
+		set net_linha [ gets "$net_file" ]
+		puts "UDP:"
+		set skip_linha 2
 	} else {
-		set net_linha [ gets $net_file ]
-		if { $net_linha == "" } {
+		set net_linha [ gets "$net_file" ]
+		if { $net_linha == "" && $argv == "-a" && $skip_linha == 0 } {
+			set net_linha [ gets "$net_file" ]
+			set net_linha [ gets "$net_file" ]
+			set skip_linha 1
+		} elseif { $net_linha == "" && $argv == "-a" && $skip_linha == 2 } {
+			break
+		} elseif { $net_linha == "" && $argv != "-a" } {
 			break
 		}
 		# IP:PORTA DE ORIGEM
