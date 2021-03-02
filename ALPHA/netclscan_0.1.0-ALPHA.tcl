@@ -100,7 +100,7 @@ proc display_info { ip_l porta_l ip_d porta_d estado } {
 
 set ::init 0
 set ::cont_local 0
-set ::flag_dns "on"
+set ::flag_dns "off" # disabled by default, bug in the DNS module 
 set ::skip 0
 global flag_proto
 set ::time_data [ clock format [ clock seconds ] -format {%d/%m/%y %H:%M} ]
