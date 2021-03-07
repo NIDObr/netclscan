@@ -1,7 +1,7 @@
 # NET_TCL
 Mostra as conexões de rede:
 
-./Monitora_conexao [opções]
+./netclscan [opções]
 
   Opções:
  
@@ -10,3 +10,5 @@ Mostra as conexões de rede:
  -t Lista as conexões TCP
  
  -a Lista as conexoẽs UDP e TCP
+ 
+ -d Ativa a resolução de nomes (experimental)
