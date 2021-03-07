@@ -1,4 +1,4 @@
-# NET_TCL
+# NETCLSCAN
 Mostra as conexões de rede:
 
 ./netclscan [opções]
