@@ -4,7 +4,7 @@
 # author: NidoBr
 # e-mail: < coqecoisa@gmail.com >
 # github: < https://github.com/NIDObr >
-# Version: 0.1.1 BETA 
+# Version: 0.1.2 BETA 
 # info:
 #	Simple tool to display active network connections on IPV4 and IPV6 protocols 
 #	Uses as base the files of the directory "/proc/net/*" 
@@ -13,7 +13,7 @@
 #--------------------------------------MODULES
 
 # depends on the libtcl package 
-package require dns
+#package require dns
 
 #-------------------------------------FUNCTIONS
 
@@ -47,13 +47,7 @@ proc file_analyze { net_file } {
 		set ip_dest [ hex_to_dec [ string range $hex_dest 0 7 ] ]
 		set porta_dest  [ expr 0x[ string range $hex_dest 9 12 ] ]
 		set estado [ lindex $linha 3 ]
-		if { $porta_dest == 53 && $::skip == 0 } {
-			display_info $ip_local $porta_local $ip_dest $porta_dest $estado
-			set ::skip 1
-			puts aqui
-		} else {
-			display_info $ip_local $porta_local $ip_dest $porta_dest $estado
-		}
+		display_info $ip_local $porta_local $ip_dest $porta_dest $estado
 	}
 }
 proc display_info { ip_l porta_l ip_d porta_d estado } {
@@ -70,15 +64,17 @@ proc display_info { ip_l porta_l ip_d porta_d estado } {
 	set host_l $ip_l
 	set host_d $ip_d
 	if { $::flag_dns == "on" } {
-		set dns_ld [ dns::resolve $ip_l]
-		set name_l [ dns::name $dns_ld ]
-		set dns_ld [ dns::resolve $ip_d ]
-		set name_d [ dns::name $dns_ld ]
-		if { $name_l != "" } {
-			set host_l [ lindex $name_l 0 ]
-		}
-		if { $name_d != "" } {
-			set host_d [ lindex $name_d 0 ]
+
+		# TEMPORARY SOLUTION!
+		catch {
+			set name_l [ string trimright [ lindex [ exec /usr/bin/env host $host_l ] 4 ] '.' ]
+			set name_d [ string trimright [ lindex [ exec /usr/bin/env host $host_d ] 4 ] '.' ]
+			if { $name_l != "" } {
+				set host_l $name_l
+			}
+			if { $name_d != "" } {
+				set host_d $name_d
+			}
 		}
 	}
 	if { [ string first ":" "$ip_l:$porta_l" ] < 11 } {
@@ -91,7 +87,7 @@ proc display_info { ip_l porta_l ip_d porta_d estado } {
 	} else {
 		set tabd ""
 	}
-	puts "$::flag_proto	$host_l:$porta_l	$tabl		$host_d:$porta_d	$tabd		$stat"
+	puts "$::flag_proto	${host_l}:${porta_l}${tabl}		${host_d}:${porta_d}${tabd}		${stat}"
 
 }
 
