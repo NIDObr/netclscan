@@ -52,31 +52,35 @@ proc file_analyze { net_file } {
 }
 proc display_info { ip_l porta_l ip_d porta_d estado } {
 	if { $::init == 0 } {
-		puts "netclscan $::versao		$::time_data\n\nProto	IP local				ip remoto				estado\n"
+		puts "netclscan $::versao		$::time_data\n\nProto	IP local			ip remoto			estado\n"
 		set ::init 1
 	}
+	set stat " "
 	switch $estado {
 		0A { set stat "escuta" }
 		01 { set stat "estabelecido" }
 		06 { set stat "espera" }
-		07 { set stat "" }
 	}
 	set host_l $ip_l
 	set host_d $ip_d
+	# TEMPORARY SOLUTION!
 	if { $::flag_dns == "on" } {
-
-		# TEMPORARY SOLUTION!
+		set name_l ""
+		set name_d ""
 		catch {
 			set name_l [ string trimright [ lindex [ exec /usr/bin/env host $host_l ] 4 ] '.' ]
+		} errl
+		catch {
 			set name_d [ string trimright [ lindex [ exec /usr/bin/env host $host_d ] 4 ] '.' ]
-			if { $name_l != "" } {
-				set host_l $name_l
-			}
-			if { $name_d != "" } {
-				set host_d $name_d
-			}
+		} errd
+		if { $name_l != "" } {
+			set host_l $name_l
+		}
+		if { $name_d != "" } {
+			set host_d $name_d
 		}
 	}
+
 	if { [ string first ":" "$ip_l:$porta_l" ] < 11 } {
 		set tabl "	"
 	} else {
@@ -87,6 +91,7 @@ proc display_info { ip_l porta_l ip_d porta_d estado } {
 	} else {
 		set tabd ""
 	}
+
 	puts "$::flag_proto	${host_l}:${porta_l}${tabl}		${host_d}:${porta_d}${tabd}		${stat}"
 
 }
