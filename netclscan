@@ -36,7 +36,7 @@ proc file_analyze { net_file } {
 			break
 		} elseif { [ lindex $linha 0 ] == "sl" } {
 			set linha [ gets $net_file ]
-			set ::flag_proto "udp:"
+			set ::flag_proto "udp"
 		}
 		# IP:PORTA DE ORIGEM
 		set hex_orig [ lindex $linha 1 ]
@@ -52,32 +52,30 @@ proc file_analyze { net_file } {
 }
 proc display_info { ip_l porta_l ip_d porta_d estado } {
 	if { $::init == 0 } {
-		puts "netclscan $::versao		$::time_data\n\nProto	IP local			ip remoto			estado\n"
+		puts "netclscan $::versao		$::time_data\n\nProto	Estado		IP local		ip remoto\n"
 		set ::init 1
 	}
-	set stat " "
+	set stat "desconhecido"
 	switch $estado {
-		0A { set stat "escuta" }
+		0A { set stat "escuta      " }
 		01 { set stat "estabelecido" }
-		06 { set stat "espera" }
+		06 { set stat "espera      " }
 	}
-	set host_l $ip_l
-	set host_d $ip_d
 	# TEMPORARY SOLUTION!
 	if { $::flag_dns == "on" } {
 		set name_l ""
 		set name_d ""
 		catch {
-			set name_l [ string trimright [ lindex [ exec /usr/bin/env host $host_l ] 4 ] '.' ]
+			set name_l [ string trimright [ lindex [ exec /usr/bin/env host $ip_l ] 4 ] '.' ]
 		} errl
 		catch {
-			set name_d [ string trimright [ lindex [ exec /usr/bin/env host $host_d ] 4 ] '.' ]
+			set name_d [ string trimright [ lindex [ exec /usr/bin/env host $ip_d ] 4 ] '.' ]
 		} errd
 		if { $name_l != "" } {
-			set host_l $name_l
+			set ip_l $name_l
 		}
 		if { $name_d != "" } {
-			set host_d $name_d
+			set ip_d $name_d
 		}
 	}
 
@@ -86,13 +84,8 @@ proc display_info { ip_l porta_l ip_d porta_d estado } {
 	} else {
 		set tabl ""
 	}
-	if { [ string first ":" "$ip_d:$porta_d" ] < 11 } {
-		set tabd "	"
-	} else {
-		set tabd ""
-	}
 
-	puts "$::flag_proto	${host_l}:${porta_l}${tabl}		${host_d}:${porta_d}${tabd}		${stat}"
+	puts "$::flag_proto	${stat}	${ip_l}:${porta_l}${tabl}	${ip_d}:${porta_d}"
 
 }
 
@@ -127,17 +120,17 @@ foreach arg_dns $_arg {
 
 switch $_arg {
 	-t {
-		set ::flag_proto "tcp:"
+		set ::flag_proto "tcp"
 		set net_file [ open /proc/net/tcp r ]
 		file_analyze $net_file
 	}
 	-u {
-		set ::flag_proto "udp:"
+		set ::flag_proto "udp"
 		set net_file [ open /proc/net/udp r ]
 		file_analyze $net_file
 	}
 	-a {
-		set ::flag_proto "tcp:"
+		set ::flag_proto "tcp"
 		set tmp_time [ clock format [ clock seconds ] -format {%d%m%y_%H%M%S} ]
 		set tcp_file [ open /proc/net/tcp r ]
 		set udp_file [ open /proc/net/udp r ]
